@@ -119,10 +119,7 @@ export default function AudioManager({
           <span className='text-sm text-gray-400 font-medium'>Online</span>
         </div>
       </div>
-
-      {/* Main Recording Interface */}
       <div className='flex flex-col items-center'>
-        {/* Large Blue Microphone Button */}
         <div className='relative mb-4'>
           <div className='inline-block'>
             <AudioRecorderDialog
@@ -133,11 +130,7 @@ export default function AudioManager({
             />
           </div>
         </div>
-
-        {/* Recording Status */}
         <p className='text-gray-400 text-sm mb-4'>Click to start recording</p>
-
-        {/* Audio Player and Buttons */}
         {audioData && (
           <div className='w-full space-y-3'>
             <AudioPlayer

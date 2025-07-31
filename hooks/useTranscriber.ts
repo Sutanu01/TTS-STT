@@ -60,7 +60,6 @@ export function useTranscriber(): Transcriber {
             audio[i] = (SCALING_FACTOR * (left[i] + right[i])) / 2
           }
         } else {
-          // If the audio is not stereo, we can just use the first channel:
           audio = audioData.getChannelData(0)
         }
 

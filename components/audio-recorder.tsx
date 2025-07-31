@@ -18,7 +18,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Start recording function
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -54,7 +53,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
     }
   }
 
-  // Pause/resume recording
   const pauseRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       if (isPaused) {
@@ -74,7 +72,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
     }
   }
 
-  // Stop recording
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop()
@@ -91,7 +88,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
     }
   }
 
-  // Format elapsed time
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -100,7 +96,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
       .padStart(2, '0')}`
   }
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -114,7 +109,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
 
   return (
     <div className="flex w-full flex-col items-center space-y-2 text-gray-100">
-      {/* Timer + Pulse */}
       <div className="flex w-full items-center justify-center">
         <div className="font-mono text-lg text-gray-100">
           {formatTime(recordingTime)}
@@ -124,7 +118,6 @@ export function AudioRecorder({ onRecordingComplete }: AudioRecorderProps) {
         )}
       </div>
 
-      {/* Controls */}
       <div className="flex space-x-4">
         {!isRecording ? (
           <Button
