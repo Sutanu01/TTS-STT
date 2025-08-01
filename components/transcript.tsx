@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { Transcriber } from '@/lib/types'
 
 interface Props {
@@ -7,17 +10,36 @@ interface Props {
 export default function Transcript({ transcriber }: Props) {
   const output = transcriber.output
   const isProcessing = transcriber.isProcessing
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
 
+    if (isProcessing) {
+      setElapsed(0)
+      interval = setInterval(() => {
+        setElapsed(prev => +(prev + 0.1).toFixed(1))
+      }, 100)
+    } else {
+      if (interval) clearInterval(interval)
+    }
+
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isProcessing])
+  
   return (
     <div className='bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl shadow-lg p-6'>
-      <h2 className='text-xl font-semibold text-gray-100 mb-4'>Transcription</h2>
-      
+      <h2 className='text-xl font-semibold text-gray-100 mb-4'>Transcription 
+        <span className='text-lg text-gray-500 ml-2'>({elapsed}s)</span>
+      </h2>
       <div className='bg-[#121212] border border-[#2a2a2a] rounded-lg p-4 min-h-[120px] max-h-64 overflow-auto'>
         {isProcessing ? (
           <div className='flex flex-col space-y-3'>
             <div className='flex items-center gap-2'>
               <div className='w-2 h-2 bg-blue-500 rounded-full animate-pulse'></div>
               <span className='text-sm text-gray-400'>Processing audio...</span>
+              <span className='text-xs text-gray-500'>({elapsed}s)</span>
             </div>
             <div className='space-y-2'>
               <div className='h-3 animate-pulse rounded bg-[#2a2a2a] w-3/4'></div>

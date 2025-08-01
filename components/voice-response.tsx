@@ -1,6 +1,8 @@
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import { Volume2, VolumeX, Loader } from 'lucide-react'
+import { Volume2, VolumeX, Loader, Timer as TimerIcon } from 'lucide-react'
 import { Transcriber } from '@/lib/types'
 import axios from 'axios'
 import MarkdownViewer from './MarkDownViewer'
@@ -14,6 +16,9 @@ export default function VoiceResponse({ transcriber }: Props) {
   const [isSynthesizing, setIsSynthesizing] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [response, setResponse] = useState<string>('')
+
+  const [generationTime, setGenerationTime] = useState<number | null>(null)
+  const [playbackTime, setPlaybackTime] = useState<number | null>(null)
 
   const output = transcriber.output
   const workerRef = useRef<Worker | null>(null)
@@ -34,16 +39,18 @@ export default function VoiceResponse({ transcriber }: Props) {
 
   const generateResponse = async () => {
     setIsGenerating(true)
+    setGenerationTime(null)
+    const start = performance.now()
     if (output) {
       try {
         const response = await axios.post('/api/get-response', {
           query: output.text
         })
         setResponse(response.data.data)
+        const end = performance.now()
+        setGenerationTime(+((end - start) / 1000).toFixed(1))
       } catch (error) {
-        setResponse(
-          `error occurred while fetching response from groq: ${error}`
-        )
+        setResponse(`error occurred while fetching response from groq: ${error}`)
       } finally {
         setIsGenerating(false)
       }
@@ -52,11 +59,11 @@ export default function VoiceResponse({ transcriber }: Props) {
       setIsGenerating(false)
     }
   }
-
   const playResponse = async () => {
     if (!response || !workerRef.current) return
     setIsSynthesizing(true)
     setIsPlaying(false)
+    setPlaybackTime(null)
 
     try {
       workerRef.current.postMessage(response)
@@ -68,10 +75,14 @@ export default function VoiceResponse({ transcriber }: Props) {
 
         setIsSynthesizing(false)
         setIsPlaying(true)
+
+        const start = performance.now()
         audio.play()
 
         audio.onended = () => {
           setIsPlaying(false)
+          const end = performance.now()
+          setPlaybackTime(+((end - start) / 1000).toFixed(1))
           URL.revokeObjectURL(audioUrl)
         }
       }
@@ -89,7 +100,22 @@ export default function VoiceResponse({ transcriber }: Props) {
   return (
     <div className='rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] p-6 shadow-lg'>
       <div className='mb-4 flex items-center justify-between'>
-        <h2 className='text-xl font-semibold text-gray-100'>AI Response</h2>
+        <div className='flex items-center gap-3'>
+          <h2 className='text-xl font-semibold text-gray-100'>AI Response</h2>
+          {generationTime !== null && (
+            <span className='text-xs text-gray-400 flex items-center gap-1'>
+              <TimerIcon className='w-4 h-4' />
+              <span className='font-medium'>Gen: {generationTime}s</span>
+            </span>
+          )}
+          {playbackTime !== null && (
+            <span className='text-xs text-gray-400 flex items-center gap-1'>
+              <TimerIcon className='w-4 h-4' />
+              <span className='font-medium'>Play: {playbackTime}s</span>
+            </span>
+          )}
+        </div>
+
         <div className='flex gap-2'>
           <Button
             onClick={generateResponse}
@@ -139,9 +165,7 @@ export default function VoiceResponse({ transcriber }: Props) {
           <div className='flex flex-col space-y-3'>
             <div className='flex items-center gap-2'>
               <div className='h-2 w-2 animate-pulse rounded-full bg-emerald-500'></div>
-              <span className='text-sm text-gray-400'>
-                Generating AI response...
-              </span>
+              <span className='text-sm text-gray-400'>Generating AI response...</span>
             </div>
             <div className='space-y-2'>
               <div className='h-3 w-full animate-pulse rounded bg-[#2a2a2a]'></div>
@@ -152,14 +176,12 @@ export default function VoiceResponse({ transcriber }: Props) {
         ) : response ? (
           <div className='space-y-2'>
             <div className='mb-3 flex items-center gap-2'>
-              <div
-                className={`h-2 w-2 rounded-full ${isPlaying ? 'animate-pulse bg-blue-500' : 'bg-emerald-500'}`}
-              ></div>
+              <div className={`h-2 w-2 rounded-full ${isPlaying ? 'animate-pulse bg-blue-500' : 'bg-emerald-500'}`}></div>
               <span className='text-sm font-medium text-gray-400'>
                 {isPlaying ? 'Playing response...' : 'Response ready'}
               </span>
             </div>
-            <MarkdownViewer markdown={response}/>
+            <MarkdownViewer markdown={response} />
           </div>
         ) : (
           <div className='flex h-full items-center justify-center text-gray-500'>
